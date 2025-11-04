@@ -1,6 +1,6 @@
 """
 Kernel Methods Playground - Interactive SVM Visualization with Streamlit
-Author: CSP
+Author: ML Specialist
 Run: streamlit run kernel_playground.py
 """
 
@@ -272,8 +272,23 @@ with st.sidebar:
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
     X = df[['x', 'y']].values
-    y = df['label'].values
-    y = np.where(y > 0, 1, -1)
+    y_raw = df['label'].values
+    
+    # Handle both numeric and categorical labels
+    if y_raw.dtype == object or isinstance(y_raw[0], str):
+        # Categorical labels - convert to numeric
+        unique_labels = np.unique(y_raw)
+        if len(unique_labels) != 2:
+            st.error(f"Error: Expected 2 classes, found {len(unique_labels)}. Please provide binary classification data.")
+            st.stop()
+        # Map first unique label to -1, second to 1
+        label_map = {unique_labels[0]: -1, unique_labels[1]: 1}
+        y = np.array([label_map[label] for label in y_raw])
+        st.info(f"Label mapping: {unique_labels[0]} → -1, {unique_labels[1]} → +1")
+    else:
+        # Numeric labels - convert to -1 and 1
+        y = np.where(y_raw > 0, 1, -1)
+    
     dataset_name = "Custom Dataset"
 else:
     dataset_map = {
