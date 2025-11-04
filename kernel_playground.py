@@ -24,32 +24,113 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for better UI
-st.markdown("""
-<style>
-    .main {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    .stApp {
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    }
-    h1, h2, h3 {
-        color: #ffffff;
-        font-weight: 700;
-    }
-    .metric-card {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        padding: 20px;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-</style>
-""", unsafe_allow_html=True)
+# Initialize theme in session state
+if 'dark_mode' not in st.session_state:
+    st.session_state.dark_mode = False
 
-# Title
-st.markdown("<h1 style='text-align: center; color: #ffffff;'>🧠 Kernel Methods Playground</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #e0e0e0;'>Interactive SVM & Kernel Tricks Visualization</p>", unsafe_allow_html=True)
+# Theme toggle function
+def toggle_theme():
+    st.session_state.dark_mode = not st.session_state.dark_mode
+
+# Custom CSS based on theme
+if st.session_state.dark_mode:
+    # Dark mode styling
+    st.markdown("""
+    <style>
+        .main {
+            background-color: #0a0a0a;
+        }
+        .stApp {
+            background-color: #0a0a0a;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            color: #ffffff !important;
+            font-weight: 700;
+        }
+        .metric-card {
+            background: rgba(30, 30, 30, 0.9);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        .stTabs [data-baseweb="tab-list"] {
+            background-color: #1a1a1a;
+        }
+        .stTabs [data-baseweb="tab"] {
+            color: #ffffff;
+            background-color: #1a1a1a;
+        }
+        .stTabs [aria-selected="true"] {
+            background-color: #2a2a2a;
+            color: #00ff88 !important;
+        }
+        .sidebar .sidebar-content {
+            background-color: #0f0f0f;
+        }
+        p, label, .stMarkdown {
+            color: #e0e0e0 !important;
+        }
+        .stSelectbox, .stSlider, .stFileUploader {
+            color: #ffffff !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+else:
+    # Light mode styling
+    st.markdown("""
+    <style>
+        .main {
+            background-color: #ffffff;
+        }
+        .stApp {
+            background-color: #ffffff;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            color: #1a1a1a !important;
+            font-weight: 700;
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .stTabs [data-baseweb="tab-list"] {
+            background-color: #f8f9fa;
+        }
+        .stTabs [data-baseweb="tab"] {
+            color: #1a1a1a;
+            background-color: #f8f9fa;
+        }
+        .stTabs [aria-selected="true"] {
+            background-color: #ffffff;
+            color: #0066cc !important;
+            border-bottom: 3px solid #0066cc;
+        }
+        .sidebar .sidebar-content {
+            background-color: #f8f9fa;
+        }
+        p, label, .stMarkdown {
+            color: #2a2a2a !important;
+        }
+        .stSelectbox, .stSlider, .stFileUploader {
+            color: #1a1a1a !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+# Title with theme toggle
+col_title, col_theme = st.columns([6, 1])
+with col_title:
+    st.markdown("<h1 style='text-align: center;'>🧠 Kernel Methods Playground</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center;'>Interactive SVM & Kernel Tricks Visualization</p>", unsafe_allow_html=True)
+with col_theme:
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("🌓 Toggle Theme", use_container_width=True):
+        toggle_theme()
+        st.rerun()
 
 # Dataset generators
 def generate_linear(n: int, noise: float = 0.1) -> Tuple[np.ndarray, np.ndarray]:
@@ -186,13 +267,6 @@ with st.sidebar:
     show_margins = st.checkbox("Show Margins", value=True)
     resolution = st.slider("Boundary Resolution", 20, 100, 50, 10,
                           help="Higher = smoother but slower")
-    
-    st.markdown("---")
-    
-    # Custom kernel code editor
-    if kernel_type.startswith("Custom"):
-        st.markdown("#### 💻 Custom Kernel Code")
-        st.info("You can modify the custom kernel functions in the source code")
 
 # Generate or load data
 if uploaded_file is not None:
@@ -239,7 +313,7 @@ compute_time = (time.time() - start_time) * 1000
 support_vectors = X[svm.support_]
 n_support = len(support_vectors)
 
-# Main content area
+# Main content area - Metrics cards
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -267,6 +341,10 @@ with col3:
     """.format(compute_time), unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
+
+# Set plot template based on theme
+plot_template = "plotly_dark" if st.session_state.dark_mode else "plotly_white"
+plot_bg_color = "rgba(0,0,0,0)" if st.session_state.dark_mode else "rgba(255,255,255,1)"
 
 # Create visualizations
 tab1, tab2, tab3, tab4 = st.tabs(["📍 Decision Boundary", "🔥 Kernel Matrix", "🎯 Feature Space", "📊 Model Info"])
@@ -307,6 +385,7 @@ with tab1:
         ))
     
     # Add decision boundary line
+    boundary_color = '#00ff88' if st.session_state.dark_mode else '#0066cc'
     fig.add_trace(go.Contour(
         x=np.linspace(x_min, x_max, resolution),
         y=np.linspace(y_min, y_max, resolution),
@@ -318,7 +397,7 @@ with tab1:
             showlines=True,
             coloring='lines'
         ),
-        line=dict(color='white', width=3),
+        line=dict(color=boundary_color, width=4),
         showscale=False,
         hoverinfo='skip',
         name='Decision Boundary'
@@ -326,6 +405,7 @@ with tab1:
     
     # Add margin lines
     if show_margins:
+        margin_color = '#fbbf24' if st.session_state.dark_mode else '#ff9800'
         for margin in [-1, 1]:
             fig.add_trace(go.Contour(
                 x=np.linspace(x_min, x_max, resolution),
@@ -338,38 +418,40 @@ with tab1:
                     showlines=True,
                     coloring='lines'
                 ),
-                line=dict(color='yellow', width=2, dash='dash'),
+                line=dict(color=margin_color, width=2, dash='dash'),
                 showscale=False,
                 hoverinfo='skip',
                 name=f'Margin {margin}'
             ))
     
     # Add data points
-    for label, color, name in [(-1, 'red', 'Class -1'), (1, 'blue', 'Class +1')]:
+    for label, color, name in [(-1, '#ef4444', 'Class -1'), (1, '#3b82f6', 'Class +1')]:
         mask = y == label
+        point_line_color = 'white' if st.session_state.dark_mode else 'black'
         fig.add_trace(go.Scatter(
             x=X[mask, 0],
             y=X[mask, 1],
             mode='markers',
             marker=dict(
-                size=8,
+                size=10,
                 color=color,
-                line=dict(color='white', width=1)
+                line=dict(color=point_line_color, width=1)
             ),
             name=name
         ))
     
     # Add support vectors
     if show_support_vectors:
+        sv_line_color = 'white' if st.session_state.dark_mode else 'black'
         fig.add_trace(go.Scatter(
             x=support_vectors[:, 0],
             y=support_vectors[:, 1],
             mode='markers',
             marker=dict(
-                size=14,
-                color='yellow',
+                size=16,
+                color='#fbbf24',
                 symbol='diamond',
-                line=dict(color='black', width=2)
+                line=dict(color=sv_line_color, width=2)
             ),
             name='Support Vectors'
         ))
@@ -378,15 +460,17 @@ with tab1:
         title=f"Decision Boundary - {kernel_type} Kernel",
         xaxis_title="Feature X",
         yaxis_title="Feature Y",
-        template="plotly_dark",
+        template=plot_template,
         height=600,
         showlegend=True,
+        plot_bgcolor=plot_bg_color,
+        paper_bgcolor=plot_bg_color,
         legend=dict(
             yanchor="top",
             y=0.99,
             xanchor="left",
             x=0.01,
-            bgcolor="rgba(0,0,0,0.5)"
+            bgcolor="rgba(255,255,255,0.1)" if st.session_state.dark_mode else "rgba(0,0,0,0.05)"
         )
     )
     
@@ -410,9 +494,10 @@ with tab2:
     elif kernel_type == "Custom (Chi-squared)":
         K = custom_kernel_chi2(X[:n_show], X[:n_show])
     
+    colorscale = 'Viridis' if st.session_state.dark_mode else 'Blues'
     fig = go.Figure(data=go.Heatmap(
         z=K,
-        colorscale='Viridis',
+        colorscale=colorscale,
         colorbar=dict(title="Similarity")
     ))
     
@@ -420,8 +505,10 @@ with tab2:
         title=f"Kernel Matrix ({n_show}×{n_show}) - Higher values = More similar",
         xaxis_title="Sample Index",
         yaxis_title="Sample Index",
-        template="plotly_dark",
-        height=600
+        template=plot_template,
+        height=600,
+        plot_bgcolor=plot_bg_color,
+        paper_bgcolor=plot_bg_color
     )
     
     st.plotly_chart(fig, use_container_width=True)
@@ -455,7 +542,7 @@ with tab3:
             ])
             
             fig = go.Figure()
-            for label, color, name in [(-1, 'red', 'Class -1'), (1, 'blue', 'Class +1')]:
+            for label, color, name in [(-1, '#ef4444', 'Class -1'), (1, '#3b82f6', 'Class +1')]:
                 mask = y == label
                 fig.add_trace(go.Scatter3d(
                     x=X_poly[mask, 0],
@@ -473,8 +560,10 @@ with tab3:
                     yaxis_title="xy",
                     zaxis_title="y²"
                 ),
-                template="plotly_dark",
-                height=600
+                template=plot_template,
+                height=600,
+                plot_bgcolor=plot_bg_color,
+                paper_bgcolor=plot_bg_color
             )
             
             st.plotly_chart(fig, use_container_width=True)
@@ -498,6 +587,7 @@ with tab3:
         distances = np.linalg.norm(X - center, axis=1)
         influences = np.exp(-gamma * distances**2)
         
+        colorscale_rbf = 'Plasma' if st.session_state.dark_mode else 'YlOrRd'
         fig = go.Figure()
         fig.add_trace(go.Scatter(
             x=X[:, 0],
@@ -506,7 +596,7 @@ with tab3:
             marker=dict(
                 size=10,
                 color=influences,
-                colorscale='Plasma',
+                colorscale=colorscale_rbf,
                 showscale=True,
                 colorbar=dict(title="RBF Influence")
             ),
@@ -514,11 +604,12 @@ with tab3:
             hoverinfo='text'
         ))
         
+        star_color = '#fbbf24' if st.session_state.dark_mode else '#ff9800'
         fig.add_trace(go.Scatter(
             x=[center[0]],
             y=[center[1]],
             mode='markers',
-            marker=dict(size=20, color='yellow', symbol='star'),
+            marker=dict(size=20, color=star_color, symbol='star'),
             name='Center Point'
         ))
         
@@ -526,8 +617,10 @@ with tab3:
             title=f"RBF Kernel Influence (γ={gamma})",
             xaxis_title="Feature X",
             yaxis_title="Feature Y",
-            template="plotly_dark",
-            height=600
+            template=plot_template,
+            height=600,
+            plot_bgcolor=plot_bg_color,
+            paper_bgcolor=plot_bg_color
         )
         
         st.plotly_chart(fig, use_container_width=True)
@@ -544,7 +637,7 @@ with tab3:
         """)
         
         fig = go.Figure()
-        for label, color, name in [(-1, 'red', 'Class -1'), (1, 'blue', 'Class +1')]:
+        for label, color, name in [(-1, '#ef4444', 'Class -1'), (1, '#3b82f6', 'Class +1')]:
             mask = y == label
             fig.add_trace(go.Scatter(
                 x=X[mask, 0],
@@ -558,8 +651,10 @@ with tab3:
             title="Original Input Space (No Transformation)",
             xaxis_title="Feature X",
             yaxis_title="Feature Y",
-            template="plotly_dark",
-            height=600
+            template=plot_template,
+            height=600,
+            plot_bgcolor=plot_bg_color,
+            paper_bgcolor=plot_bg_color
         )
         
         st.plotly_chart(fig, use_container_width=True)
@@ -610,9 +705,11 @@ with tab4:
 
 # Footer
 st.markdown("---")
-st.markdown("""
-<div style='text-align: center; color: #888;'>
+footer_color = "#888888" if st.session_state.dark_mode else "#666666"
+st.markdown(f"""
+<div style='text-align: center; color: {footer_color};'>
     <p>💡 <b>Tips:</b> Try different kernels on different datasets to see how they perform!</p>
     <p>🔴 Circles dataset → RBF kernel | 🔵 XOR pattern → Polynomial/RBF | 📏 Linear data → Linear kernel</p>
+    <p style='margin-top: 20px;'>Current Mode: <b>{'🌙 Dark Mode' if st.session_state.dark_mode else '☀️ Light Mode'}</b></p>
 </div>
 """, unsafe_allow_html=True)
