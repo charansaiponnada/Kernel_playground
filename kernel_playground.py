@@ -1,6 +1,6 @@
 """
 Kernel Methods Playground - Interactive SVM Visualization with Streamlit
-Author: ML Specialist
+Author: CSP
 Run: streamlit run kernel_playground.py
 """
 
